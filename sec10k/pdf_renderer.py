@@ -13,13 +13,24 @@ def html_to_pdf(html_path: Path, pdf_path: Path) -> None:
         browser = p.chromium.launch()
         page = browser.new_page()
 
-        page.goto(html_path.as_uri(), wait_until="domcontentloaded")
+        page.goto(html_path.as_uri(), wait_until="networkidle")
+        page.pdf(prefer_css_page_size=False)
+
+
+        page.add_style_tag(content="""
+        @media print {
+        @page {
+            size: auto;
+        }
+
+    """)
 
         page.pdf(
             path=str(pdf_path),
             format="Letter",          
+            prefer_css_page_size=True,
             print_background=True,
-            margin={"top": "12mm", "bottom": "12mm", "left": "10mm", "right": "10mm"},
         )
 
+        page.close()
         browser.close()
