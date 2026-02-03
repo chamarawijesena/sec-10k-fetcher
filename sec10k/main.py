@@ -10,6 +10,7 @@ from .ticker_cik import resolve_cik, resolve_cik_from_ticker
 from .filing_finder import pick_latest_10k
 from .converter import html_to_text
 from .storage import make_output_dir, write_json, write_text
+from .pdf_renderer import html_to_pdf
 
 from dotenv import load_dotenv
 
@@ -48,6 +49,7 @@ def parse_args() -> argparse.Namespace:
         default="INFO",
         help="Logging level: DEBUG, INFO, WARNING, ERROR",
     )
+
     return p.parse_args()
 
 
@@ -102,11 +104,20 @@ def main() -> None:
             "filing_document": doc_url,
         },
         "fetched_at_utc": datetime.now(UTC).replace(microsecond=0).isoformat(),
+        "outputs": {
+            "html":"filing.html",
+            "text": "filing.txt",
+            "pdf": "filing.pdf",
+        },
     }
 
     write_json(out_dir / "metadata.json", metadata)
     write_text(out_dir / "filing.html", html)
     write_text(out_dir / "filing.txt", text)
+    
+    pdf_path = out_dir / "filing.pdf"
+    log.info("Writing PDF: %s", pdf_path)
+    html_to_pdf(out_dir / "filing.html", pdf_path)
 
 
     log.info("Done")
